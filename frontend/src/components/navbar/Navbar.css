@@ -1,0 +1,48 @@
+/* Navbar.css */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    background-color: #cbcbcb;
+    color: white;
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    height: 10vh;
+  }
+  .navbar-center{
+    position: absolute;
+    left: 48%;
+    transform: translateX(-50%);
+    width: 30%;
+  }
+  .search-bar {
+    width: 100%;
+    padding: 8px;
+    border: none;
+    border-radius: 4px;
+    font-size: 16px;
+  }
+  .navbar-right {
+    background-color: red;
+    position: absolute;
+    right: 50px;
+    top: 15px;
+  }
+  .logout-button {
+    padding: 8px 20px;
+    background-color: red;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0px;
+  }
+  .logout-button:hover {
+    background-color: darkred;
+  }
+  
+  
