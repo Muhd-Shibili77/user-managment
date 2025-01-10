@@ -72,8 +72,11 @@ function HomePage() {
     }
   };
   const handleLogout = () => {
-    dispatch(logout());
-    navigate("/");
+    const isConfrim = window.confirm('Are you sure want to logout?')
+    if(isConfrim){
+      dispatch(logout());
+      navigate("/");
+    }
   };
 
   return (

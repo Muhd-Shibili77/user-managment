@@ -29,8 +29,8 @@ const updateUser = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    await User.findByIdAndDelete(id);
-    res.json({ message: 'User deleted successfully' });
+    const user = await User.findByIdAndDelete(id);
+    res.json({ message: 'User deleted successfully',user });
   } catch (err) {
     res.status(500).json({ message: 'Server Error' });
   }
@@ -42,14 +42,14 @@ const addUser = async (req,res)=>{
     
     if (!name || name.trim().length < 2) {
         return res
-          
+        .status(400)
           .json({
             success: false,
             message: "Name must be at least 2 characters long.",
           });
       } else if (!/^[A-Za-z\s]+$/.test(name)) {
         return res
-          
+        .status(400)
           .json({
             success: false,
             message: "Name must contain only alphabets and spaces.",
@@ -58,44 +58,44 @@ const addUser = async (req,res)=>{
     
       if (!email || email.trim() === "") {
         return res
-          
+        .status(400)
           .json({ success: false, message: "Email is required." });
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         return res
-          
+        .status(400)
           .json({ success: false, message: "Invalid email format." });
       }
       const emailExist = await User.findOne({ email: email });
       if (emailExist) {
         return res
-          
+        .status(400)
           .json({ success: false, message: "email already used" });
       }
     
       if (!password || password.trim().length < 8) {
         return res
-          
+        .status(400)
           .json({
             success: false,
             message: "Password must be at least 8 characters long.",
           });
       } else if (!/(?=.*[A-Z])/.test(password)) {
         return res
-          
+        .status(400)
           .json({
             success: false,
             message: "Password must include at least one uppercase letter.",
           });
       } else if (!/(?=.*[0-9])/.test(password)) {
         return res
-          
+        .status(400)
           .json({
             success: false,
             message: "Password must include at least one number.",
           });
       } else if (!/(?=.*[!@#$%^&*])/.test(password)) {
         return res
-          
+        .status(400)
           .json({
             success: false,
             message: "Password must include at least one special character.",
@@ -108,7 +108,7 @@ const addUser = async (req,res)=>{
     try {
       const userExists = await User.findOne({ email });
       if (userExists) {
-        return res.json({ success:false,message: 'User already exists' });
+        return res.status(400).json({ success:false,message: 'User already exists' });
       }
       const salt = 10;
       const hashedPassword = await bcrypt.hash(password, salt);

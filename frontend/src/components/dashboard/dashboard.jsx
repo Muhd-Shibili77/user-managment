@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import "./dashboard.css";
-import { useSelector } from "react-redux";
+import { useSelector,useDispatch } from "react-redux";
+import { fetchUsers,AddUser,updateUser,deleteUser } from "../../redux/userSlice";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-function Dashboard({fetchUsers, query }) {
-  const [users, setUsers] = useState([]);
-  
-  const token = sessionStorage.getItem("token");
+function Dashboard({ query }) {
+  const dispatch = useDispatch()
+  const {users , loading,error }= useSelector((state)=>state.users)
+ 
   const [isModalOpen, setIsModalOpen] = useState(false); 
   const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
   
@@ -21,20 +22,12 @@ function Dashboard({fetchUsers, query }) {
   
 
   useEffect(() => {
-    const fetchAndSetUsers = async () => {
-      const data = await fetchUsers(query);
-      setUsers(data);
-    };
-    fetchAndSetUsers();
-  }, [query, fetchUsers]); 
    
+    dispatch(fetchUsers(query))
+      
+  }, [query, dispatch]);
 
  
-  const handleEdit = (userId) => {
-    const user = users.find((user) => user._id === userId);
-    setEditUser(user);
-    setIsModalOpen(true);
-  };
 
   // Handle add new user
   const handleAddUserBtn = () => {
@@ -46,42 +39,25 @@ function Dashboard({fetchUsers, query }) {
     setAddUser((prevUser) => ({ ...prevUser, [name]: value }));
   };
 
-  const handleAddUser = async()=>{
-    try {
-      const response = await fetch("http://localhost:3000/admin/addUser", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(addUser),
-      });
+  const handleAddUser = async ()=>{
+    dispatch(AddUser(addUser))
+    .unwrap()
+    .then(() => {
+      toast.success("user added successfully", {
+          autoClose: 500,
+          onClose: () => setIsAddUserModalOpen(false),
+        });
+        setAddUser({name: "",email: "",password: ""});
+    })
+    .catch(() =>{
+      console.log(error)
+      toast.error( error || "Failed to Add user.")
 
-      if (response.ok) {
-        const data = await response.json();
-        if(data.success){
-          setUsers((prevUsers) => [...prevUsers, data.user]);
-          toast.success("User added successfully!", {
-            autoClose: 500,
-            onClose: () => setIsAddUserModalOpen(false),
-          });
-          setAddUser({
-            name: "",
-            email: "",
-            password: "",
-          });
-        }else{
-          toast.error(data.message)
-        }
-        
-      } else {
-        console.error("Failed to add user");
-        toast.error("Failed to add user")
-      }
-    } catch (error) {
-      console.error("Error adding user:", error);
-    }
+    });
   }
+
+
+  
 
   const handleCloseAddUserModal = ()=>{
     setIsAddUserModalOpen(false)
@@ -94,70 +70,49 @@ function Dashboard({fetchUsers, query }) {
 
 
 
+  const handleEdit = (userId) => {
+    const user = users.find((user) => user._id === userId);
+    setEditUser(user);
+    setIsModalOpen(true);
+  };
+
   
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setEditUser((prevUser) => ({ ...prevUser, [name]: value }));
   };
 
-  const handleUpdateUser = async (updatedUser) => {
-    try {
-      const response = await fetch(
-        `http://localhost:3000/admin/users/${updatedUser._id}`,
-        {
-          method: "PUT",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedUser),
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-
-        setUsers((prevUsers) =>
-          prevUsers.map((user) => (user._id === data._id ? data : user))
-        );
-        toast.success(data.message || "profile updated successfully", {
-          autoClose: 500,
-          onClose: () => setIsModalOpen(false),
-        });
-       
-      } else {
-        console.error("Failed to update user");
-      }
-    } catch (error) {
-      console.error("Error updating user:", error);
-    }
-  };
-
-
-  const handleDelete = async (userId) => {
-    try {
-      const response = await fetch(`http://localhost:3000/admin/users/${userId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        setUsers((prevUsers) => prevUsers.filter((user) => user._id !== userId));  // Remove deleted user from the state
-       
-      } else {
-        console.error("Failed to delete user");
-      }
-    } catch (error) {
-      console.error('Error deleting user:', error);
-    }
-    
-  };
+  const handleUpdateUser = async ()=>{
+      dispatch(updateUser(editUser))
+      .unwrap()
+      .then(() => {
+        toast.success("user updated successfully", {
+            autoClose: 500,
+            onClose: () => setIsModalOpen(false),
+          });
+      })
+      .catch(() => toast.error("Failed to update user."));
+  }
 
   
 
-  
-  
+const handleDeleteBtn = (userId)=>{
+  const isConfirm = window.confirm('Are you sure want to delete the user?')
+  if(isConfirm){
+    handleDelete(userId)
+  }
+}
 
+const handleDelete = async (userId) => {
+  dispatch(deleteUser(userId))
+  .unwrap()
+  .then(()=>{
+    toast.success("user deleted successfully", {
+      autoClose: 500
+    });
+  })
+  .catch(() => toast.error("Failed to delete user."));
+}
 
   return (
     <div className="table-container">
@@ -187,7 +142,7 @@ function Dashboard({fetchUsers, query }) {
                     Edit
                   </button>
                   <button
-                    onClick={() => handleDelete(user._id)}
+                    onClick={() => handleDeleteBtn(user._id)}
                     className="delete-btn"
                   >
                     Delete
@@ -219,7 +174,7 @@ function Dashboard({fetchUsers, query }) {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                handleUpdateUser(editUser);
+                handleUpdateUser();
               }}
             >
               <label>Name:</label>
@@ -260,7 +215,7 @@ function Dashboard({fetchUsers, query }) {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                handleAddUser(addUser);
+                handleAddUser();
               }}
             >
               <label>Name:</label>

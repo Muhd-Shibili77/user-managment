@@ -9,9 +9,11 @@ function Navbar({onSearch }) {
   const dispatch = useDispatch()
   const [searchQuery, setSearchQuery] = useState("");
   const handleLogout = () => {
-
-    dispatch(logoutAdmin());
-    navigate("/admin/login");
+    const isConfrim = window.confirm('Are you sure want to logout?')
+    if(isConfrim){
+      dispatch(logoutAdmin());
+      navigate("/admin/login");
+    }
   };
 
 
